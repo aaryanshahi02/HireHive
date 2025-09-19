@@ -6,7 +6,7 @@ const clerkWebhooks = async (req, res) => {
     try {
 
         //CREATE A SVIX INSTANT WITH CLERK WEBHOOKS SECRET
-        const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET)
+        const whook = new Webhook (process.env.CLERK_WEBHOOK_SECRET)
 
         //verifying headers
         await whook.verify(JSON.stringify(req.body), {
@@ -40,7 +40,7 @@ const clerkWebhooks = async (req, res) => {
                     name: data.first_name + " " + data.last_name,
                     image: data.image_url,
                 }
-                await User.findByIdAndUpate(data.id, userData)
+                await User.findByIdAndUpdate(data.id, userData)
                 res.json({})
                 break;
             }
@@ -59,8 +59,9 @@ const clerkWebhooks = async (req, res) => {
 
     } catch (error) {
         console.log(error.message);
-        res.json({siccess:false,message:'Webhooks Error'})
+        console.error("Webhook error:", error);
+        res.json({success:false,message:'Webhooks Error'})
     }
 }
 
-export { clerkWebhooks };
+export default clerkWebhooks
