@@ -3,22 +3,26 @@ import bcrypt from 'bcrypt'
 import {v2 as cloudinary} from 'cloudinary'
 import generateToken from "../utils/generateToken.js";
 import Job from "../models/Job.js";
+import JobApplication from "../models/jobApplication.js";
 
 //register a new comp
 export const registerCompany = async (req,res) => {
+
+
+    
 
     const {name, email, password} = req.body
 
     const imageFile = req.file;
 
     if (!name || !email ||!password ||!imageFile) {
-        return res.json({success:false, message: "Missing Details"})
+        return res.status(400).json({success:false, message: "Missing Details"})
     }
     try {
         const companyExists = await Company.findOne({email})
 
         if (companyExists) {
-            return res.jsn({success:false, message:"Company already registered"})
+            return res.json({success:false, message:"Company already registered"})
         }
 
         const salt = await bcrypt.genSalt(10)
@@ -58,7 +62,7 @@ export const loginCompany = async (req,res) => {
         
         const company = await Company.findOne({email})
 
-        if (bcrypt.compare(password, company.password)) {
+        if (await bcrypt.compare(password, company.password)) {
             res.json({
                 success: true,
                 company:{
@@ -142,9 +146,14 @@ export const getCompanyPostedJobs = async (req,res) => {
 
         const jobs = await Job.find({companyId})
 
-        //todo adding no of applicants info in data
+        // adding no of applicants info in data
+        const jobsData = await Promise.all(jobs.map(async (job)=> {
+            const applicants = await JobApplication.find({jobId: job._id});
+            return {...job.toObject(),applicants:applicants.length}
 
-        res.json({success:true, jobsData: jobs})
+        }))
+
+        res.json({success:true, jobsData })
 
     } catch (error) {
         res.json({success:false, message:error.message})
